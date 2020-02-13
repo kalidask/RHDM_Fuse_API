@@ -70,10 +70,10 @@
 			</setHeader>
 			<log message="bmi:-- ${header.bmi}" />
 			<setHeader headerName="illness" id="_setHeader5">
-				<jsonpath>$.policydolist[0].insureddolist[*].illness</jsonpath>
+				<jsonpath>$.policydolist[0].insureddolist[*].medicalquestions[*].illness</jsonpath>
 			</setHeader>
 			<setHeader headerName="dateofdiagnosis" id="_setHeader6">
-				<jsonpath>$.policydolist[0].insureddolist[*].dateofdiagnosis</jsonpath>
+				<jsonpath>$.policydolist[0].insureddolist[*].medicalquestions[*].dateofdiagnosis</jsonpath>
 			</setHeader>
 			<setHeader headerName="planoptioncd" id="_setHeader7">
 				<jsonpath>$.policydolist[0].insureddolist[*].planoptioncd</jsonpath>
@@ -89,7 +89,7 @@
 					<simple>${header.entryage} >= 16 and ${header.bmi} >= 29.01 and  31 >= ${header.bmi} </simple>
 					<setHeader headerName="Exchange.HTTP_RESPONSE_CODE"
 						id="_setHeader10">
-						<constant>400</constant>
+						<constant>200</constant>
 					</setHeader>
 					<setBody>
 						<constant>
@@ -105,7 +105,7 @@
 					<simple>${header.illness} == 'Hypertension' and ${header.dateofdiagnosis} >= '>20 years' </simple>
 					<setHeader headerName="Exchange.HTTP_RESPONSE_CODE"
 						id="_setHeader11">
-						<constant>400</constant>
+						<constant>200</constant>
 					</setHeader>
 					<setBody>
 						<constant>
@@ -120,7 +120,7 @@
 					<simple>${header.entryage} >= 51 and 120 >= ${header.entryage}  and ${header.planoptioncd} == 'FL-PRT10-HMB500' and ${header.minunitscd} == 'Years' and ${header.inwardtypecd} == 'NEWBUSINESS' </simple>
 					<setHeader headerName="Exchange.HTTP_RESPONSE_CODE"
 						id="_setHeader12">
-						<constant>400</constant>
+						<constant>200</constant>
 					</setHeader>
 					<setBody>
 						<constant>
@@ -137,7 +137,7 @@
 					<simple>${header.entryage} >= 46 and 50 >= ${header.entryage}  and ${header.planoptioncd} == 'FL-PRT10-HMB500' and ${header.minunitscd} == 'Years' and ${header.inwardtypecd} == 'NEWBUSINESS' </simple>
 					<setHeader headerName="Exchange.HTTP_RESPONSE_CODE"
 						id="_setHeader13">
-						<constant>400</constant>
+						<constant>200</constant>
 					</setHeader>
 					<setBody>
 						<constant>
@@ -149,6 +149,10 @@
 					</setBody>
 				</when>
 				<otherwise>
+				<setHeader headerName="Exchange.HTTP_RESPONSE_CODE"
+						id="_setHeader14">
+						<constant>400</constant>
+					</setHeader>
 					<setBody>
 						<constant>
 					   {
@@ -158,9 +162,6 @@
 					</setBody>
 				</otherwise>
 			</choice>
-
-
-			<log id="route-log" message="&gt;&gt;&gt; ${body}" />
 		</route>
 	</camelContext>
 </beans>
