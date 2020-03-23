@@ -1,167 +1,64 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <beans xmlns="http://www.springframework.org/schema/beans"
-	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="        http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd        http://camel.apache.org/schema/spring       http://camel.apache.org/schema/spring/camel-spring.xsd">
-
-
-	<bean
-		class="org.apache.camel.component.servlet.CamelHttpTransportServlet"
-		id="camelHttpTransportServlet" />
-	<bean
-		class="org.springframework.boot.web.servlet.ServletRegistrationBean"
-		id="servlet">
-		<property name="name" value="CamelServlet" />
-		<property name="servlet" ref="camelHttpTransportServlet" />
-		<property name="urlMappings" value="/api/*" />
-	</bean>
-
-	<camelContext id="camel"
-		xmlns="http://camel.apache.org/schema/spring" streamCache="true">
-
-		<dataFormats>
-			<json id="js" library="Jackson" />
-		</dataFormats>
-
-
-		<restConfiguration apiContextPath="docs"
-			component="servlet" contextPath="/api">
-			<!-- Setup swagger API descriptions -->
-			<apiProperty key="schemes" value="{{swagger.schemes}}" />
-			<apiProperty key="host" value="{{swagger.host}}" />
-			<apiProperty key="base.path" value="/employees" />
-			<apiProperty key="api.title"
-				value="{{swagger.api.title}}" />
-			<apiProperty key="api.description"
-				value="{{swagger.api.desc}}" />
-			<apiProperty key="api.contact.name"
-				value="{{swagger.api.contact}}" />
-			<apiProperty key="cors" value="false" />
-		</restConfiguration>
-
-		<rest id="PolicyDetails">
-			<!-- START OF REST CONFIG -->
-			<!-- HOD Details -->
-			<post consumes="application/json"
-				id="get-3ca7ea3c-d661-4cd2-b59b-5ed0d200aea0"
-				produces="application/json" uri="/rhdm">
-				<description>To Satisfy Rules</description>
-				<param dataType="body" name="policyBody" required="true"
-					type="body" />
-
-				<responseMessage code="200"
-					message="Request is valid" />
-				<responseMessage code="400"
-					message="Request Validation failed" />
-				<responseMessage code="500"
-					message="Service has encountered an error" />
-				<to uri="direct:getRHDMResponse" />
-			</post>
-		</rest>
-		<route id="RHDMResponse">
-			<from id="RHDM Route" uri="direct:getRHDMResponse" />
-
-			<log message="request body :  --  ${body}" />
-			<setHeader headerName="entryage" id="_setHeader3">
-				<jsonpath>$['policydolist'][0]['insureddolist'][0]['entryage']</jsonpath>
-			</setHeader>
-			<log message="entryage:-- ${header.entryage}" />
-			<setHeader headerName="bmi" id="_setHeader4">
-				<jsonpath>$['policydolist'][0]['insureddolist'][0]['bmi']</jsonpath>
-			</setHeader>
-			<log message="bmi:-- ${header.bmi}" />
-			<setHeader headerName="illness" id="_setHeader5">
-				<jsonpath>$.policydolist[0].insureddolist[*].medicalquestions[*].illness</jsonpath>
-			</setHeader>
-			<setHeader headerName="dateofdiagnosis" id="_setHeader6">
-				<jsonpath>$.policydolist[0].insureddolist[*].medicalquestions[*].dateofdiagnosis</jsonpath>
-			</setHeader>
-			<setHeader headerName="planoptioncd" id="_setHeader7">
-				<jsonpath>$.policydolist[0].insureddolist[*].planoptioncd</jsonpath>
-			</setHeader>
-			<setHeader headerName="minunitscd" id="_setHeader8">
-				<jsonpath>$.policydolist[0].minunitscd</jsonpath>
-			</setHeader>
-			<setHeader headerName="inwardtypecd" id="_setHeader9">
-				<jsonpath>$.policydolist[0].inwardtypecd</jsonpath>
-			</setHeader>
-			<choice id="_choice2">
-				<when id="_when2">
-					<simple>${header.entryage} >= 16 and ${header.bmi} >= 29.01 and  31 >= ${header.bmi} </simple>
-					<setHeader headerName="Exchange.HTTP_RESPONSE_CODE"
-						id="_setHeader10">
-						<constant>200</constant>
-					</setHeader>
-					<setBody>
-						<constant>
-					   {
-					     "decision": "STP",
-					     "action": "Load 10%",
-					     "reason_in_letter": "High body mass index"
-					   }
-					 </constant>
-					</setBody>
-				</when>
-				<when id="when3">
-					<simple>${header.illness} == 'Hypertension' and ${header.dateofdiagnosis} >= '>20 years' </simple>
-					<setHeader headerName="Exchange.HTTP_RESPONSE_CODE"
-						id="_setHeader11">
-						<constant>200</constant>
-					</setHeader>
-					<setBody>
-						<constant>
-					   {
-					     "decision": "Decline",
-					     "reason_in_letter": "H/O Hypertension"
-					   }
-					 </constant>
-					</setBody>
-				</when>
-				<when id="when4">
-					<simple>${header.entryage} >= 51 and 120 >= ${header.entryage}  and ${header.planoptioncd} == 'FL-PRT10-HMB500' and ${header.minunitscd} == 'Years' and ${header.inwardtypecd} == 'NEWBUSINESS' </simple>
-					<setHeader headerName="Exchange.HTTP_RESPONSE_CODE"
-						id="_setHeader12">
-						<constant>200</constant>
-					</setHeader>
-					<setBody>
-						<constant>
-					   {
-					     "decision": "NSTP",
-					     "PPMCTESTNAME": "Set_0011",
-					     "Priority": "3",
-					     "reason_in_letter": "H/O Hypertension"
-					   }
-					 </constant>
-					</setBody>
-				</when>
-				<when id="when5">
-					<simple>${header.entryage} >= 46 and 50 >= ${header.entryage}  and ${header.planoptioncd} == 'FL-PRT10-HMB500' and ${header.minunitscd} == 'Years' and ${header.inwardtypecd} == 'NEWBUSINESS' </simple>
-					<setHeader headerName="Exchange.HTTP_RESPONSE_CODE"
-						id="_setHeader13">
-						<constant>200</constant>
-					</setHeader>
-					<setBody>
-						<constant>
-					   {
-					     "decision": "STP",
-					     "reason_in_letter": "Tele UW Rule"
-					   }
-					 </constant>
-					</setBody>
-				</when>
-				<otherwise>
-				<setHeader headerName="Exchange.HTTP_RESPONSE_CODE"
-						id="_setHeader14">
-						<constant>400</constant>
-					</setHeader>
-					<setBody>
-						<constant>
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="        http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd          http://camel.apache.org/schema/spring       http://camel.apache.org/schema/spring/camel-spring.xsd">
+    <bean
+        class="org.apache.camel.component.servlet.CamelHttpTransportServlet" id="camelHttpTransportServlet"/>
+    <bean
+        class="org.springframework.boot.web.servlet.ServletRegistrationBean" id="servlet">
+        <property name="name" value="CamelServlet"/>
+        <property name="servlet" ref="camelHttpTransportServlet"/>
+        <property name="urlMappings" value="/api/*"/>
+    </bean>
+    <bean class="org.mycompany.conditionprocessor" id="process"/>
+    <camelContext id="camel" streamCache="true" xmlns="http://camel.apache.org/schema/spring">
+        <dataFormats>
+            <json id="js" library="Jackson"/>
+        </dataFormats>
+        <restConfiguration apiContextPath="docs" component="servlet" contextPath="/api">
+            <!-- Setup swagger API descriptions -->
+            <apiProperty key="schemes" value="{{swagger.schemes}}"/>
+            <apiProperty key="host" value="{{swagger.host}}"/>
+            <apiProperty key="base.path" value="/employees"/>
+            <apiProperty key="api.title" value="{{swagger.api.title}}"/>
+            <apiProperty key="api.description" value="{{swagger.api.desc}}"/>
+            <apiProperty key="api.contact.name" value="{{swagger.api.contact}}"/>
+            <apiProperty key="cors" value="false"/>
+        </restConfiguration>
+        <rest id="PolicyDetails">
+            <!-- START OF REST CONFIG -->
+            <!-- HOD Details -->
+            <post consumes="application/json"
+                id="get-3ca7ea3c-d661-4cd2-b59b-5ed0d200aea0"
+                produces="application/json" uri="/rhdm">
+                <description>To Satisfy Rules</description>
+                <param dataType="body" name="policyBody" required="true" type="body"/>
+                <responseMessage code="200" message="Request is valid"/>
+                <responseMessage code="400" message="Request Validation failed"/>
+                <responseMessage code="500" message="Service has encountered an error"/>
+                <to uri="direct:getRHDMResponse"/>
+            </post>
+        </rest>
+        <route id="RHDMResponse">
+            <from id="RHDM Route" uri="direct:getRHDMResponse"/>
+            <doTry id="_doTry1">
+                <log id="_log1" message="request body :    ${body}"/>
+                <bean id="_bean1" method="validateFuseCondition" ref="process"/>
+                <marshal id="_marshal1" ref="js"/>
+                <log id="_log2" message="my response body:----- ${body}"/>
+                <doCatch id="_doCatch1">
+                    <exception>java.lang.Exception</exception>
+                    <setHeader headerName="Exchange.HTTP_RESPONSE_CODE" id="_setHeader14">
+                        <constant>400</constant>
+                    </setHeader>
+                    <setBody id="_setBody1">
+                        <simple>
 					   {
 					     "Input parameters didn't match the defined Conditions !"
 					   }
-					 </constant>
-					</setBody>
-				</otherwise>
-			</choice>
-		</route>
-	</camelContext>
+					 </simple>
+                    </setBody>
+                </doCatch>
+            </doTry>
+        </route>
+    </camelContext>
 </beans>
